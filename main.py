@@ -1,4 +1,5 @@
 import os
+import csv
 from random import randrange
 from art import text2art
 from colorama import Fore
@@ -63,11 +64,13 @@ fComputer = {
   '''
 }
 
+### Computer Class ###
 class Computer:
-  def __init__(self):
+  def __init__(self, name):
+    self.name = name
     self.scores = {
       "won": 0,
-      "lost": 1,
+      "lost": 0,
       "draw": 0
     }
 
@@ -77,17 +80,21 @@ class Computer:
   def newScore(self, score):
     key = [*score.keys()][0]
     self.scores[key] += 1
-    print(self.scores)
+
+  def showScore(self):
+    print(f'''
+      Player: {self.name}
+      Score: {self.scores}
+    ''')
+    saveScoresFile(self.name, self.scores)
 
 ### Player Class ###
-class player(Computer):
+class Player(Computer):
   def __init__(self, name):
-    self.name = name
-    self.scores = {
-      "won": 0,
-      "lost": 0,
-      "draw": 0
-    }
+    super().__init__(name)
+
+  def setName(self, name):
+      self.name = name
 
   def entry(self):
     try:
@@ -114,6 +121,7 @@ class player(Computer):
           replay = False
         except:
           pass
+    
 
 ### Game Class ###
 class jokenPy:
@@ -160,26 +168,48 @@ class jokenPy:
   def score(self):
     pass
 
-player11 = player('raul')
-replay = True
+def scoresFile():
+  with open("scores.csv", "r") as scoresFile:
+    csv_scores = csv.DictReader(scoresFile)
+    length = sum(1  for _ in csv_scores)
+    return {'rows': csv_scores, 'len':length}
 
-while replay:
-  os.system('clear')
-  print(text2art("Jokenpon game!", font="small"))
+def saveScoresFile(player, score):
+  with open("scores.csv", "a", newline='') as saveScoreFile:
+    fieldnames = scoresFile()['rows'].fieldnames
+    csv_saveScore = csv.DictWriter(saveScoreFile, fieldnames=fieldnames)
+    row = {**{'n':'2','name':player}, **score}
+    csv_saveScore.writerow(row)
 
-  entryPlayer = player11.entry()
-  newGame = jokenPy(entryPlayer)
-  scores = newGame.play()
-  player11.newScore(scores['player'])
+def lastGame():
+  rows = scoresFile()['len']
+  return rows
 
-  try:
-    replay = bool(int(input('''
-      Replay:
-        1> Yes
-        0> No
-    ''')))
-  except:
-    replay = False
+def start():
+  replay = True
+  player11 = Player('raul')
+  computer = Computer('computer')
 
-#player11.showScore()
-    
+  while replay:
+    os.system('clear')
+    print(text2art("Jokenpon game!", font="small"))
+
+    entryPlayer = player11.entry()
+    newGame = jokenPy(entryPlayer)
+    scores = newGame.play()
+    player11.newScore(scores['player'])
+    computer.newScore(scores['computer'])
+
+    try:
+      replay = bool(int(input('''
+        Replay:
+          1> Yes
+          0> No
+      ''')))
+    except:
+      replay = False
+
+  player11.showScore()
+  computer.showScore()
+
+start()
