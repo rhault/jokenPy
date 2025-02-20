@@ -2,7 +2,7 @@ import os
 import csv
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
-from random import randrange
+import random
 from art import text2art
 from colorama import Fore
 
@@ -134,7 +134,7 @@ class jokenPy:
     self.player = player
   
   def play(self):
-    computer = randrange(1, 4) # 1 = rock, 2 = paper, 3 = scissors
+    computer = random.randint(1, 3) # 1 = rock, 2 = paper, 3 = scissors
     scorePlayer = {"lost": 0}
     scoreComputer = {"lost": 0}
     
