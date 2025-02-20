@@ -1,5 +1,7 @@
 import os
 import csv
+from InquirerPy import inquirer
+from InquirerPy.base.control import Choice
 from random import randrange
 from art import text2art
 from colorama import Fore
@@ -64,6 +66,14 @@ fComputer = {
   '''
 }
 
+with open("scores.csv", "r") as scoresFile:
+  csv_scores = csv.DictReader(scoresFile)
+  fieldnames = csv_scores.fieldnames
+  rows = list(csv_scores)
+  lenght = len(rows)
+  lastGame = rows[-1] if lenght > 1 else 0
+  numberGame = int(lastGame['n']) + 1
+
 ### Computer Class ###
 class Computer:
   def __init__(self, name):
@@ -81,12 +91,18 @@ class Computer:
     key = [*score.keys()][0]
     self.scores[key] += 1
 
+  def saveScoresFile(self, player, score):
+    with open("scores.csv", "a", newline='') as saveScoreFile:
+      csv_saveScore = csv.DictWriter(saveScoreFile, fieldnames= fieldnames)
+      row = {**{'n': numberGame,'name':player}, **score}
+      csv_saveScore.writerow(row)
+
   def showScore(self):
     print(f'''
       Player: {self.name}
       Score: {self.scores}
     ''')
-    saveScoresFile(self.name, self.scores)
+    self.saveScoresFile(self.name, self.scores)
 
 ### Player Class ###
 class Player(Computer):
@@ -98,30 +114,19 @@ class Player(Computer):
 
   def entry(self):
     try:
-      entryPlayer = int(input('''
-        Choose between: 
-        1> Rock 
-        2> Paper 
-        3> Scissors
-      '''))
+      entryPlayer = inquirer.select(
+        message= "Choose between:",
+        choices= [
+          Choice(value=1, name='Rock'), 
+          Choice(value=2, name='Paper'), 
+          Choice(value=3, name='Scissors')
+        ]
+      ).execute()
+
       return entryPlayer
     except ValueError:
       os.system('clear')
       print("Invalid input. Please enter a number between 1 and 3.")
-      replay = True
-
-      while replay:
-        try:
-          os.system('clear')
-          replay = bool(int(input('''
-            Replay:
-              1> Yes
-              0> No
-          ''')))
-          replay = False
-        except:
-          pass
-    
 
 ### Game Class ###
 class jokenPy:
@@ -168,27 +173,15 @@ class jokenPy:
   def score(self):
     pass
 
-def scoresFile():
-  with open("scores.csv", "r") as scoresFile:
-    csv_scores = csv.DictReader(scoresFile)
-    length = sum(1  for _ in csv_scores)
-    return {'rows': csv_scores, 'len':length}
-
-def saveScoresFile(player, score):
-  with open("scores.csv", "a", newline='') as saveScoreFile:
-    fieldnames = scoresFile()['rows'].fieldnames
-    csv_saveScore = csv.DictWriter(saveScoreFile, fieldnames=fieldnames)
-    row = {**{'n':'2','name':player}, **score}
-    csv_saveScore.writerow(row)
-
-def lastGame():
-  rows = scoresFile()['len']
-  return rows
 
 def start():
+  os.system('clear')
+  print(text2art("Jokenpon game!", font="small"))
+  namePlayer = inquirer.text(message="Insert player name:").execute()
+  
   replay = True
-  player11 = Player('raul')
-  computer = Computer('computer')
+  player11 = Player(namePlayer)
+  computer = Computer('Computer')
 
   while replay:
     os.system('clear')
@@ -201,14 +194,17 @@ def start():
     computer.newScore(scores['computer'])
 
     try:
-      replay = bool(int(input('''
-        Replay:
-          1> Yes
-          0> No
-      ''')))
+      replay = inquirer.select(
+          message= "Replay:",
+          choices= [
+            Choice(value=True, name='Yes'), 
+            Choice(value=False, name='No')
+          ]
+      ).execute()
     except:
       replay = False
 
+  os.system('clear')
   player11.showScore()
   computer.showScore()
 

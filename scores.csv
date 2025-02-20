@@ -1,3 +1,5 @@
 n,name,won,lost,draw
-2,raul,2,4,2
-2,computer,4,2,2
+1,Raul,2,0,4
+1,Computer,0,2,4
+2,Raul,1,1,0
+2,Computer,1,1,0
